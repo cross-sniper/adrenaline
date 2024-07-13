@@ -1,0 +1,39 @@
+#+title: Adrenaline language
+#+PROPERTY: header-args :tangle no
+#+author: cross-sniper
+
+* Example:
+#+begin_src markdown
+.begin
+.var variable1 as 10
+.log "Hello, world!"
+.log variable1
+.end
+#+end_src
+
+* What is Adrenaline
+  Adrenaline is a simple language designed for specific project needs.
+
+  To run Adrenaline, you need:
+  - Emacs: for compiling .org files
+
+  - Bun: for executing scripts in the bin directory
+
+  ## Build and Run Instructions
+
+  1. **Compile Org Files:**
+     - Run `make` to compile the .org files into executable scripts.
+
+  2. **Navigate to the Bin Directory:**
+     - Change directory (`cd`) into the `bin` directory where your executable (`app.js`) resides.
+
+  3. **Run Adrenaline Script:**
+     - Execute the script using `bun run app.js`.
+
+  Example shell commands:
+
+  #+begin_src sh
+    make
+    cd bin
+    bun run app.js
+  #+end_src

@@ -1,0 +1,86 @@
+#+title: Adrenaline's tokenizer's source
+#+PROPERTY: header-args :tangle ./bin/tokenizer.js
+#+author: cross-sniper
+
+* Lets make a tokenizer
+
+    the first thing you need to ask yourself is:
+    - "what should the syntax be?"
+
+    for us it will look something like this:
+
+    #+begin_src markdown :tangle no
+        .begin // 0
+        .var variable1 as 10 // 1
+        .log "Hello, world!" // 2...
+        .log variable1
+        .end
+    #+end_src
+
+    we should expect this:
+    #+begin_src javascript :tangle no
+        [
+            { name: "startNode", connection: 1 },
+            { name: "setVar", value: { name: "variable1", value: "10" }, connection: 2 },
+            { name: "log", value: { value: "Hello, world!", type: "inline" }, connection: 3 },
+            { name: "log", value: { value: "variable1", type: "var" }, connection: 4 },
+            { name: "finalNode", value: 0 }
+        ];
+    #+end_src
+
+    to begin, we need to split the input by spaces, after removing the comments
+    #+begin_src javascript
+        export function tokenize(inputString){
+            let tokens = [];
+            let lines = inputString.split("\n");
+            let lineNum = 0;
+            
+            for(let line of lines){
+                // Remove comments
+                line = line.replace(/\/\/.*/, "").trim();
+                
+                if(line === ""){
+                    lineNum++;
+                    continue;
+                }
+
+                let parts = line.split(/\s+/);
+                let command = parts[0];
+                
+                switch(command){
+                    case ".begin":
+                        tokens.push(token("startNode", {}, lineNum + 1));
+                        break;
+                    case ".var":
+                        let varName = parts[1];
+                        let varValue = parts.slice(3).join(" "); // Join remaining parts as the value
+                        tokens.push(token("setVar", { name: varName, value: varValue }, lineNum + 1));
+                        break;
+                    case ".log":
+                        let logValue = parts.slice(1).join(" "); // Join all parts after .log as the value
+                        if(logValue.startsWith("\"") && logValue.endsWith("\"")){
+                            tokens.push(token("log", { value: logValue.slice(1, -1), type: "inline" }, lineNum + 1));
+                        }else{
+                            tokens.push(token("log", { value: logValue, type: "var" }, lineNum + 1));
+                        }
+                        break;
+                    case ".end":
+                        tokens.push(token("finalNode", 0));
+                        break;
+                    default:
+                        console.error("Unknown command:", command);
+                }
+                lineNum++;
+            }
+            return tokens;
+        }
+
+
+        function token(type, value, connection=null){
+            return {
+                name: type,
+                value: value,
+                connection: connection
+            };
+        }
+    #+end_src

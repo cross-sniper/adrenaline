@@ -1,4 +1,4 @@
-#+title: Adrenaline's front-end source
+#+title: Adrenaline's parser's source
 #+PROPERTY: header-args :tangle yes
 #+author: cross-sniper
 
@@ -24,7 +24,7 @@
         here is a simple parser that we will use for now
 
         #+begin_src javascript :tangle bin/adrenaline.js
-            class Node{
+            export class Node{
                 constructor(
                     name="",
                     value = {},
@@ -136,23 +136,10 @@
     * parsing, evaluating and interpreting the nodes
         here we will begin parsing the nodes, and interpreting them, we will assume you have already parsed some nodes
 
-        #+begin_src javascript :tangle bin/app.js
-            import {parse} from "./adrenaline";
-
-            // Sample node data array
-            const nodeDataList = [
-                { name: "startNode", connection: 1 },
-                { name: "setVar", value: { name: "variable1", value: "10" }, connection: 2 },
-                { name: "log", value: { value: "Hello, world!", type: "inline" }, connection: 3 },
-                { name: "log", value: { value: "variable1", type: "var" }, connection: 4 },
-                { name: "finalNode", value: 0 }
-            ];
-
-            // Function to parse nodes (already defined in adrenaline.js)
-            const parsedNodes = parse(nodeDataList);
+        #+begin_src javascript :tangle bin/adrenaline.js
 
             // Function to execute parsed nodes
-            function exec(nodeList) {
+            export function exec(nodeList) {
                 let vars = {}; // Variable store
                 let currentNodeId = 0; // Starting node ID (assuming 0 is the start node)
 
@@ -207,7 +194,25 @@
                     }
                 }
             }
+        #+end_src
+        #+begin_src javascript :tangle ./bin/app.js
+            import {parse, exec} from "./adrenaline"
+            import {tokenize} from "./tokenizer"
+            // Sample data
+            
+            const nodeDataList = tokenize(`.begin // 0
+                .var variable1 as 10 // 1
+                .log "Hello, world!" // 2...
+                .log variable1
+                .end
+            `)
+
+            // Function to parse nodes (already defined in adrenaline.js)
+            const parsedNodes = parse(nodeDataList);
 
             // Call the execution function with parsed nodes
             exec(parsedNodes);
         #+end_src
+
+    * Lets make a tokenizer
+        refer to =(tokenizer.org)=
