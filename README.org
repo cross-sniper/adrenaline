@@ -16,10 +16,9 @@
 
   To run Adrenaline, you need:
   - Emacs: for compiling .org files
-
   - Bun: for executing scripts in the bin directory
 
-** Build and Run Instructions
+* Build and Run Instructions
 
   1. Compile Org Files:
      - Run `make` to compile the .org files into executable scripts.
@@ -38,4 +37,5 @@
     bun run app.js
   #+end_src
 
-** License: MIT
+* License
+  This project is licensed under the MIT License.
