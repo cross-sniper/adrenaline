@@ -19,15 +19,15 @@
 
   - Bun: for executing scripts in the bin directory
 
-  ## Build and Run Instructions
+** Build and Run Instructions
 
-  1. **Compile Org Files:**
+  1. Compile Org Files:
      - Run `make` to compile the .org files into executable scripts.
 
-  2. **Navigate to the Bin Directory:**
+  2. Navigate to the Bin Directory:
      - Change directory (`cd`) into the `bin` directory where your executable (`app.js`) resides.
 
-  3. **Run Adrenaline Script:**
+  3. Run Adrenaline Script:
      - Execute the script using `bun run app.js`.
 
   Example shell commands:
@@ -37,3 +37,5 @@
     cd bin
     bun run app.js
   #+end_src
+
+** License: MIT
