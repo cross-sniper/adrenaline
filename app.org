@@ -13,9 +13,8 @@
         bun run app.js
     #+end_src
 
-
 * Adrenaline language: parsing and executing
-    ** parser
+    * parser
         to make the parser, we first need to settle on how to represent the nodes
 
         we can make each node be represented in xml, which would make things a bit more difficult, or going with json, which is widely used, and supported by javascript
@@ -57,101 +56,95 @@
         - connection: to what this node is connected to, like what node is after this one
             if no connection is passed, the program should stop there
 
-        ** parsing nodes
+    * parsing nodes
 
-            here we will parse the nodes down to the Node class level, at this point we should already have put syntax rules to work, and have the whole node list ready
+        here we will parse the nodes down to the Node class level, at this point we should already have put syntax rules to work, and have the whole node list ready
 
-            here we should look into:
-            - A: is the node a valid node?
-                like in the example from before
+        here we should look into:
+        - A: is the node a valid node?
+            like in the example from before
 
-            - B: can the node be parsed down to Node class?
+        - B: can the node be parsed down to Node class?
 
-            #+begin_src javascript :tangle bin/adrenaline.js
+        #+begin_src javascript :tangle bin/adrenaline.js
+            export function parseNode(nodeData) {
+                const node = nodeData;
+                if (!node) {
+                    return null;
+                }
 
-                export function parseNode(nodeData) {
-                    const node = nodeData;
-                    if(!node){
-                        return null
-                    }
+                if (!node.name) {
+                    console.error("Invalid node format:", nodeData);
+                    return null;
+                }
 
-                    if (!node.name) {
-                        console.error("Invalid node format:", nodeData);
-                        return null;
-                    }
-
-                    switch(node.name){
-                        case "startNode":
-                            if (typeof nodeData.connection !== 'number') {
-                                console.error("Start node needs to lead to some other node.");
-                                return null;
-                            }
-                            return new Node("startNode", {}, nodeData.connection);
-                        
-                        case "setVar":
-                            if (!nodeData.value || !nodeData.value.name || !nodeData.value.value) {
-                                console.error("Invalid setVar node format:", nodeData);
-                                return null;
-                            }
-                            return new Node("setVar", nodeData.value, nodeData.connection);
-                        
-                        case "log":
-                            if (!nodeData.value || !nodeData.value.message) {
-                                console.error("Invalid log node format:", nodeData);
-                                return null;
-                            }
-                            return new Node("log", nodeData.value, nodeData.connection);
-                        
-                        case "finalNode":
-                            return new Node("finalNode", nodeData.value);
-                        
-                        default:
-                            console.error("Invalid node type:", nodeData);
+                switch (node.name) {
+                    case "startNode":
+                        if (typeof nodeData.connection !== 'number') {
+                            console.error("Start node needs to lead to some other node.");
                             return null;
+                        }
+                        return new Node("startNode", {}, nodeData.connection);
 
+                    case "setVar":
+                        if (!nodeData.value || !nodeData.value.name || !nodeData.value.value) {
+                            console.error("Invalid setVar node format:", nodeData);
+                            return null;
+                        }
+                        return new Node("setVar", nodeData.value, nodeData.connection);
+
+                    case "log":
+                        if (!nodeData.value || !nodeData.value.value) {
+                            console.error("Invalid log node format:", nodeData);
+                            return null;
+                        }
+                        return new Node("log", nodeData.value, nodeData.connection);
+
+                    case "finalNode":
+                        return new Node("finalNode", nodeData.value);
+
+                    default:
+                        console.error("Invalid node type:", nodeData);
+                        return null;
+                }
+            }
+
+            export function parse(nodeList) {
+                let parsedNodes = [];
+
+                // Iterate through each node in the list
+                for (let i = 0; i < nodeList.length; i++) {
+                    let node = nodeList[i];
+                    let parsedNode = parseNode(node); // Parse the node
+
+                    if (parsedNode === null) {
+                        // Handle invalid node
+                        console.error("Invalid node:", node);
+                        continue; // Skip to the next node
                     }
 
-
-
-                }
-
-                export function parse(nodeList) {
-                    let parsedNodes = [];
-
-                    // Iterate through each node in the list
-                    for (let i = 0; i < nodeList.length; i++) {
-                        let node = nodeList[i];
-                        let parsedNode = parseNode(node); // Parse the node
-
-
-                        if (parsedNode === null) {
-                            // Handle invalid node
-                            console.error("Invalid node:", node);
-                            continue; // Skip to the next node
-                        }
-                        parsedNodes.push(parsedNode); // Push parsed node to the array
-                        if(parsedNode.name == "finalNode"){
-                            break
-                        }
+                    parsedNodes.push(parsedNode); // Push parsed node to the array
+                    if (parsedNode.name == "finalNode") {
+                        break;
                     }
-
-                    return parsedNodes;
                 }
 
-            #+end_src
+                return parsedNodes;
+            }
+        #+end_src
 
-    ** parsing, evaluating and interpreting the nodes
-        here we will begin parsing the nodes, and interpreting them, we will assume you have allredy parsed some nodes
+    * parsing, evaluating and interpreting the nodes
+        here we will begin parsing the nodes, and interpreting them, we will assume you have already parsed some nodes
 
         #+begin_src javascript :tangle bin/app.js
-            import {parse} from "./adrenaline"
+            import {parse} from "./adrenaline";
 
             // Sample node data array
             const nodeDataList = [
                 { name: "startNode", connection: 1 },
                 { name: "setVar", value: { name: "variable1", value: "10" }, connection: 2 },
-                { name: "log", value: { value: "Hello, world!", type:"inline" }, connection: 3 },
-                { name: "log", value: { value: "variable1", type:"var" }, connection: 4 },
+                { name: "log", value: { value: "Hello, world!", type: "inline" }, connection: 3 },
+                { name: "log", value: { value: "variable1", type: "var" }, connection: 4 },
                 { name: "finalNode", value: 0 }
             ];
 
@@ -186,16 +179,28 @@
                             break;
 
                         case "log":
-                            if (!currentNode.value || !currentNode.value.message) {
+                            if (!currentNode.value || !currentNode.value.value) {
                                 console.error("Invalid log node format:", currentNode);
                                 return;
                             }
-                            console.log(currentNode.value.message);
+                            var type = currentNode.value.type
+                            let message
+                            if(type == "inline"){
+                                message = currentNode.value.value
+                            }else if(type == "var"){
+                                message = vars[currentNode.value.value]
+                                if(!message){
+                                    console.error("no variable named:", currentNode.value.value)
+                                    return
+                                }
+                            }
+                            console.log(message);
                             currentNodeId++;
                             break;
 
                         case "finalNode":
-                            process.exit(currentNode.value)
+                            process.exit(currentNode.value);
+                        
                         default:
                             console.error("Unknown node type encountered:", currentNode);
                             return;
@@ -205,5 +210,4 @@
 
             // Call the execution function with parsed nodes
             exec(parsedNodes);
-
         #+end_src
